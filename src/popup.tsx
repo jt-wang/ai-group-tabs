@@ -24,16 +24,19 @@ const Popup = () => {
     setOpenAIKey(e.target.value);
   }, []);
 
-  const updateKeyInStorage = useCallback(() => {
+  const updateOpenAIKeyInStorage = useCallback(() => {
     setStorage("openai_key", openAIKey);
   }, [openAIKey]);
+
+  const updateNewType = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setNewType(e.target.value);
+  }, []);
 
   const getAllTabsInfo = async () => {
     if (!openAIKey || !types || !types.length) {
       return;
     }
 
-    updateKeyInStorage();
     const tabs = await chrome.tabs.query({ currentWindow: true });
 
     const result = await batchGroupTabs(tabs, types, openAIKey);
@@ -49,45 +52,68 @@ const Popup = () => {
 
   return (
     <div className="p-6 min-w-[24rem]">
-      <div className="relative mb-2">
-        <label
-          className="absolute -top-2 left-2 inline-block bg-white px-1 text-xs font-medium text-gray-900"
-          htmlFor="openai-key"
-        >
-          OpenAI Key
-        </label>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          updateOpenAIKeyInStorage();
+        }}
+      >
+        <div className="flex justify-between gap-x-2 mb-2">
+          <div className="relative w-full">
+            <label
+              className="absolute -top-2 left-2 inline-block bg-white px-1 text-xs font-medium text-gray-900"
+              htmlFor="openai-key"
+            >
+              OpenAI Key
+            </label>
 
-        <input
-          id="openai-key"
-          type="password"
-          onChange={updateOpenAIKey}
-          value={openAIKey}
-          placeholder="Your OpenAI Key"
-          className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-        />
-      </div>
+            <input
+              id="openai-key"
+              type="password"
+              onChange={updateOpenAIKey}
+              value={openAIKey}
+              placeholder="Your OpenAI Key"
+              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            />
+          </div>
+          <button
+            type="submit"
+            className="rounded-md w-fit bg-indigo-600 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          >
+            Save
+          </button>
+        </div>
+      </form>
 
       <div className="flex flex-col gap-y-2 mb-2">
         <form
           onSubmit={(e) => {
+            e.preventDefault();
             const newTypes = [...types, newType];
             setNewType("");
             setTypes(newTypes);
-            e.preventDefault();
-
             chrome.storage.local.set({ types: newTypes });
             chrome.runtime.sendMessage({ types: newTypes });
           }}
         >
-          <div className="flex items-center gap-x-2">
-            <input
-              type="text"
-              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              value={newType}
-              onChange={(e) => {
-                setNewType(e.target.value);
-              }}
-            />
+          <div className="flex justify-between gap-x-2 mb-2">
+            <div className="relative w-full">
+              <label
+                className="absolute -top-2 left-2 inline-block bg-white px-1 text-xs font-medium text-gray-900"
+                htmlFor="new-group-type"
+              >
+                New Group Type
+              </label>
+
+              <input
+                id="new-grup-type"
+                type="text"
+                onChange={updateNewType}
+                value={newType}
+                placeholder="New Group Type"
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              />
+            </div>
             <button className="rounded-md w-fit bg-indigo-600 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
               Add
             </button>
